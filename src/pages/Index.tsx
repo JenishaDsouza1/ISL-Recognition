@@ -79,7 +79,14 @@ const Index = () => {
 
       for (let i = 0; i < results.multiHandLandmarks.length; i++) {
         const landmarks = results.multiHandLandmarks[i];
-        const handedness = results.multiHandedness[i].label;
+        // MediaPipe returns mirrored handedness for front camera
+        // Flip the label to match user's actual hand
+        let handedness = results.multiHandedness[i].label;
+        
+        // Swap left/right for front camera (user-facing)
+        if (currentCamera === "user") {
+          handedness = handedness === "Right" ? "Left" : "Right";
+        }
 
         drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
           color: handedness === "Right" ? "#6366f1" : "#a855f7",
