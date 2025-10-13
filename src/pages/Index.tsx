@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { Hands, Results } from "@mediapipe/hands";
-import { drawConnectors, drawLandmarks } from "@mediapipe/drawing_utils";
-import { HAND_CONNECTIONS } from "@mediapipe/hands";
-import { Camera } from "@mediapipe/camera_utils";
+import * as mpHands from "@mediapipe/hands";
+import * as drawingUtils from "@mediapipe/drawing_utils";
+import * as cameraUtils from "@mediapipe/camera_utils";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Video, VideoOff, SwitchCamera, Hand } from "lucide-react";
@@ -12,6 +11,8 @@ interface HandData {
   handedness: string;
   landmarks: Array<{ x: number; y: number; z: number }>;
 }
+
+type HandsType = InstanceType<typeof mpHands.Hands>;
 
 const Index = () => {
   const [isRunning, setIsRunning] = useState(false);
@@ -25,8 +26,8 @@ const Index = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
-  const handsRef = useRef<Hands | null>(null);
-  const cameraRef = useRef<Camera | null>(null);
+  const handsRef = useRef<HandsType | null>(null);
+  const cameraRef = useRef<InstanceType<typeof cameraUtils.Camera> | null>(null);
   const animationRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -47,7 +48,7 @@ const Index = () => {
   };
 
   const initializeMediaPipe = () => {
-    const hands = new Hands({
+    const hands = new mpHands.Hands({
       locateFile: (file) => {
         return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
       },
@@ -64,7 +65,7 @@ const Index = () => {
     handsRef.current = hands;
   };
 
-  const onResults = (results: Results) => {
+  const onResults = (results: mpHands.Results) => {
     if (!canvasRef.current || !videoRef.current) return;
 
     const canvasCtx = canvasRef.current.getContext("2d");
@@ -88,11 +89,11 @@ const Index = () => {
           handedness = handedness === "Right" ? "Left" : "Right";
         }
 
-        drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {
+        drawingUtils.drawConnectors(canvasCtx, landmarks, mpHands.HAND_CONNECTIONS, {
           color: handedness === "Right" ? "#6366f1" : "#a855f7",
           lineWidth: 3,
         });
-        drawLandmarks(canvasCtx, landmarks, {
+        drawingUtils.drawLandmarks(canvasCtx, landmarks, {
           color: handedness === "Right" ? "#4f46e5" : "#9333ea",
           lineWidth: 1,
           radius: 3,
@@ -161,7 +162,7 @@ const Index = () => {
       await videoRef.current.play();
 
       if (handsRef.current && videoRef.current) {
-        const camera = new Camera(videoRef.current, {
+        const camera = new cameraUtils.Camera(videoRef.current, {
           onFrame: async () => {
             if (handsRef.current && videoRef.current) {
               await handsRef.current.send({ image: videoRef.current });
