@@ -1,0 +1,239 @@
+╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║        🔊 TEXT-TO-SPEECH - QUICK REFERENCE 🔊                 ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝
+
+┌────────────────────────────────────────────────────────────────┐
+│ 🎯 HOW TO USE                                                  │
+└────────────────────────────────────────────────────────────────┘
+
+1. Finish signing your sentence
+   Final Sentence Card: "hello how are you"
+
+2. Click the "Speak" button
+   (Desktop: right side, Mobile: below sentence card)
+
+3. System automatically detects language
+   English: No Hindi characters → English voice
+   Hindi: Contains Devanagari (नमस्ते) → Hindi voice
+
+4. Browser speaks the text
+   🔊 "hello how are you" (in the correct language)
+
+5. Click "Speak" again to stop (if needed)
+
+
+┌────────────────────────────────────────────────────────────────┐
+│ 🌍 LANGUAGE DETECTION                                         │
+└────────────────────────────────────────────────────────────────┘
+
+AUTOMATIC - No need to tell the system which language!
+
+English Examples:
+  "hello" → Speaks in English ✅
+  "how are you" → Speaks in English ✅
+  "jenisha is here" → Speaks in English ✅
+
+Hindi Examples:
+  "नमस्ते" → Speaks in Hindi ✅
+  "कैसे हो" → Speaks in Hindi ✅
+  "जेनिशा यहाँ है" → Speaks in Hindi ✅
+
+Mixed Language:
+  "hello नमस्ते" → Speaks in Hindi (defaults to Hindi if mixed)
+
+
+┌────────────────────────────────────────────────────────────────┐
+│ 🎙️ HOW IT WORKS                                              │
+└────────────────────────────────────────────────────────────────┘
+
+User clicks "Speak"
+         ↓
+System checks text for Hindi characters (Devanagari)
+         ↓
+If Hindi characters found → Use Hindi voice (hi-IN)
+If no Hindi characters → Use English voice (en-US)
+         ↓
+System selects best available voice:
+  Priority: Google voices > Native voices > First available
+         ↓
+Browser speaks the text using Web Speech API
+         ↓
+Toast notification: "✅ Spoken in [Hindi/English]"
+
+
+┌────────────────────────────────────────────────────────────────┐
+│ 🎨 BUTTON STATES                                              │
+└────────────────────────────────────────────────────────────────┘
+
+Ready to Speak:
+  🔊 Speak (button enabled, blue background)
+
+Speaking:
+  🔊 Speaking... (icon pulsing, button disabled)
+
+During Recognition:
+  🔊 Speak (button disabled, grayed out)
+
+To Stop:
+  Click "Speak" button again while speaking
+
+
+┌────────────────────────────────────────────────────────────────┐
+│ 📱 WHERE TO FIND IT                                           │
+└────────────────────────────────────────────────────────────────┘
+
+Desktop:
+  Right side of screen, next to Translate button
+  [Translate] [Speak] ← Here
+
+Mobile:
+  Below the "Full Sentence" card
+  [Translate] [Speak] ← Two buttons side-by-side
+
+
+┌────────────────────────────────────────────────────────────────┐
+│ ✅ WHAT GETS SPOKEN                                           │
+└────────────────────────────────────────────────────────────────┘
+
+Priority order (speaks first available):
+  1. Full Sentence (if available)
+  2. Current Word (if no sentence)
+  3. Current Letter (if no word)
+
+Example:
+  Sentence: "hello how are you"
+  Speaks: "hello how are you" ✅ (full sentence)
+
+  Sentence: "" (empty)
+  Word: "hello"
+  Speaks: "hello" ✅ (current word)
+
+
+┌────────────────────────────────────────────────────────────────┐
+│ 🔧 BROWSER SUPPORT                                            │
+└────────────────────────────────────────────────────────────────┘
+
+Desktop:
+  ✅ Chrome - Excellent (Google voices)
+  ✅ Edge - Excellent (Microsoft + Google voices)
+  ✅ Firefox - Good (system voices)
+  ✅ Safari - Good (macOS voices)
+  ✅ Opera - Excellent (Chromium-based)
+
+Mobile:
+  ✅ Chrome (Android) - Excellent
+  ✅ Safari (iOS) - Good (Siri voices)
+  ✅ Samsung Internet - Good
+  ✅ Firefox (Android) - Good
+
+
+┌────────────────────────────────────────────────────────────────┐
+│ 🐛 TROUBLESHOOTING                                            │
+└────────────────────────────────────────────────────────────────┘
+
+Problem: No sound when clicking "Speak"
+Solutions:
+  ✓ Check system volume (not muted)
+  ✓ Check browser audio settings
+  ✓ Try a different browser
+  ✓ Refresh the page
+
+Problem: Wrong language voice (Hindi in English or vice versa)
+Solutions:
+  ✓ Install Hindi language pack:
+    Windows: Settings → Language → Add Hindi
+    macOS: System Prefs → Spoken Content
+    Android: Settings → Text-to-speech → Install Hindi
+  ✓ Use Chrome or Edge (best Hindi support)
+  ✓ Check if text is correct language
+
+Problem: Speech cuts off
+Solutions:
+  ✓ Some browsers limit length (~160 characters)
+  ✓ Try shorter sentences
+  ✓ Check browser console for errors
+
+Problem: "No voice available" error
+Solutions:
+  ✓ Wait 2-3 seconds for voices to load
+  ✓ Refresh the page
+  ✓ Install language support
+  ✓ Try different browser
+
+
+┌────────────────────────────────────────────────────────────────┐
+│ 💡 PRO TIPS                                                   │
+└────────────────────────────────────────────────────────────────┘
+
+✅ Best Practices:
+  • Use Chrome or Edge for best quality
+  • Install Hindi language pack for better Hindi pronunciation
+  • Finalize your sentence before speaking
+  • Check system volume before starting
+  • Use headphones in noisy environments
+
+⚡ Quick Actions:
+  • Click "Speak" → Starts speaking
+  • Click "Speak" again → Stops speaking
+  • Toast shows which language is being used
+  • Pulsing icon = currently speaking
+
+
+┌────────────────────────────────────────────────────────────────┐
+│ 🧪 TEST IT NOW!                                               │
+└────────────────────────────────────────────────────────────────┘
+
+English Test:
+  1. Sign: "hello"
+  2. Click "Speak"
+  3. Should hear: 🔊 "hello" (English voice)
+
+Hindi Test:
+  1. Translate a sentence to Hindi
+  2. Sentence becomes: "नमस्ते" (or similar)
+  3. Click "Speak"
+  4. Should hear: 🔊 "नमस्ते" (Hindi voice)
+
+Stop Test:
+  1. Click "Speak" to start
+  2. While speaking, click "Speak" again
+  3. Speech should stop immediately
+
+
+┌────────────────────────────────────────────────────────────────┐
+│ 📊 TECHNICAL DETAILS                                          │
+└────────────────────────────────────────────────────────────────┘
+
+Technology: Web Speech API (built into browser)
+No external APIs needed: ✅ Works offline!
+Languages: English (en-US), Hindi (hi-IN)
+Detection: Automatic (checks for Devanagari Unicode)
+Voice Selection: Google > Native > First available
+Character Limit: ~160-200 chars (browser dependent)
+
+
+┌────────────────────────────────────────────────────────────────┐
+│ 📚 DOCUMENTATION                                              │
+└────────────────────────────────────────────────────────────────┘
+
+Full Documentation:
+  → TEXT_TO_SPEECH_FEATURE.md
+
+Implementation Details:
+  → src/lib/speech.ts (speech utility)
+  → src/pages/Index.tsx (speakCurrent function)
+
+Related Features:
+  → Translation (converts to Hindi/English)
+  → Grammar correction (before speaking)
+
+
+╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║  🎉 TEXT-TO-SPEECH IS READY TO USE!                           ║
+║                                                                ║
+║  Try it: Sign → Click "Speak" → Hear your sentence! 🔊       ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝

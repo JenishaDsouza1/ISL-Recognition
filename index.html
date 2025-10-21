@@ -1,24 +1,45 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ISL Recognition - Real-time Indian Sign Language Translation</title>
-    <meta name="description" content="Real-time Indian Sign Language recognition system using MediaPipe and AI. Translate ISL gestures to text instantly with dual-hand detection and live feedback." />
-    <meta name="author" content="ISL Recognition" />
 
-    <meta property="og:title" content="ISL Recognition - Real-time Sign Language Translation" />
-    <meta property="og:description" content="Translate Indian Sign Language to text in real-time using advanced hand tracking technology" />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+  <title>ISL Recognition - Real-time Indian Sign Language Translation</title>
+  <meta name="description"
+    content="Real-time Indian Sign Language recognition system using MediaPipe and AI. Translate ISL gestures to text instantly with dual-hand detection and live feedback." />
+  <meta name="author" content="ISL Recognition" />
 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@lovable_dev" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
-  </head>
+  <meta property="og:title" content="ISL Recognition - Real-time Sign Language Translation" />
+  <meta property="og:description"
+    content="Translate Indian Sign Language to text in real-time using advanced hand tracking technology" />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="/logo.svg" />
 
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="ISL Recognition" />
+  <meta name="twitter:description" content="Real-time Indian Sign Language Translation" />
+  <meta name="twitter:image" content="/logo.svg" />
+  <script>
+    // When opened via a local URL some browsers/devices may apply different scaling.
+    // For localhost/127.0.0.1, apply a conservative root font-size so layout matches the network preview.
+    (function () {
+      try {
+        const host = location.hostname;
+        if (host === 'localhost' || host === '127.0.0.1' || host === '::1') {
+          // Increase slightly for local dev so UI appears larger when testing locally
+          document.documentElement.style.fontSize = '17px';
+        }
+      } catch (e) {
+        // noop
+      }
+    })();
+  </script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
 </html>

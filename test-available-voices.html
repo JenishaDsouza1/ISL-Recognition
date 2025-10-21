@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Check Available TTS Voices</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th,
+    td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background: #4CAF50;
+      color: white;
+    }
+
+    tr:nth-child(even) {
+      background: #f2f2f2;
+    }
+
+    .google {
+      background: #fff3cd !important;
+      font-weight: bold;
+    }
+
+    .test-btn {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+
+    .test-btn:hover {
+      background: #45a049;
+    }
+
+    .filter {
+      margin: 20px 0;
+    }
+
+    .filter select {
+      padding: 8px;
+      font-size: 14px;
+    }
+
+    .stats {
+      background: #e7f3ff;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>🔊 Available Text-to-Speech Voices</h1>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="filter">
+    <label>Filter by language: </label>
+    <select id="langFilter" onchange="filterVoices()">
+      <option value="all">All Languages</option>
+      <option value="en">English</option>
+      <option value="hi">Hindi</option>
+    </select>
+  </div>
+
+  <table id="voicesTable">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Voice Name</th>
+        <th>Language</th>
+        <th>Local</th>
+        <th>Test</th>
+      </tr>
+    </thead>
+    <tbody id="voicesBody">
+      <tr>
+        <td colspan="5">Loading voices...</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <script>
+    let allVoices = [];
+
+    function loadVoices() {
+      allVoices = speechSynthesis.getVoices();
+
+      if (allVoices.length === 0) {
+        setTimeout(loadVoices, 100);
+        return;
+      }
+
+      displayVoices(allVoices);
+      displayStats(allVoices);
+    }
+
+    function displayStats(voices) {
+      const googleVoices = voices.filter(v => v.name.toLowerCase().includes('google'));
+      const englishVoices = voices.filter(v => v.lang.startsWith('en'));
+      const hindiVoices = voices.filter(v => v.lang.startsWith('hi'));
+
+      document.getElementById('stats').innerHTML = `
+        <strong>Voice Statistics:</strong><br>
+        Total Voices: ${voices.length}<br>
+        Google Voices: ${googleVoices.length} (highlighted in yellow)<br>
+        English Voices: ${englishVoices.length}<br>
+        Hindi Voices: ${hindiVoices.length}
+      `;
+    }
+
+    function displayVoices(voices) {
+      const tbody = document.getElementById('voicesBody');
+      tbody.innerHTML = '';
+
+      voices.forEach((voice, index) => {
+        const row = document.createElement('tr');
+        const isGoogle = voice.name.toLowerCase().includes('google');
+
+        if (isGoogle) {
+          row.className = 'google';
+        }
+
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${voice.name}${isGoogle ? ' ⭐' : ''}</td>
+          <td>${voice.lang}</td>
+          <td>${voice.localService ? 'Yes' : 'No'}</td>
+          <td><button class="test-btn" onclick="testVoice('${voice.name}', '${voice.lang}')">Test</button></td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function filterVoices() {
+      const filter = document.getElementById('langFilter').value;
+
+      let filtered = allVoices;
+      if (filter === 'en') {
+        filtered = allVoices.filter(v => v.lang.startsWith('en'));
+      } else if (filter === 'hi') {
+        filtered = allVoices.filter(v => v.lang.startsWith('hi'));
+      }
+
+      displayVoices(filtered);
+    }
+
+    function testVoice(voiceName, lang) {
+      const text = lang.startsWith('hi') ? 'नमस्ते, आप कैसे हैं?' : 'Hello, how are you?';
+      const utterance = new SpeechSynthesisUtterance(text);
+      const voice = allVoices.find(v => v.name === voiceName);
+
+      if (voice) {
+        utterance.voice = voice;
+        utterance.lang = lang;
+        speechSynthesis.speak(utterance);
+      }
+    }
+
+    // Load voices
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+      speechSynthesis.onvoiceschanged = loadVoices;
+    }
+    loadVoices();
+  </script>
+</body>
+
+</html>
