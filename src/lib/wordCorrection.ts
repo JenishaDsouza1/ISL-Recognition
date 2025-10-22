@@ -12,17 +12,11 @@
 export const wordCorrections: Record<string, string> = {
   // === NAMES - Common misrecognitions ===
   
-  // Jenisha variations
-  'geisha': 'jenisha',
-  'geesha': 'jenisha',
-  'gaisha': 'jenisha',
-  'genisha': 'jenisha',
-  'jennisha': 'jenisha',
-  
   // Add your commonly used names here
   // Pattern: 'wrong_spelling': 'correct_name'
   
   // Example names (uncomment and modify as needed):
+  // 'geesha': 'jenisha',  // if backend gives "geesha" and you want "jenisha"
   // 'jon': 'john',
   // 'mery': 'mary',
   // 'mike': 'michael',

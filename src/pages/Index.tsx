@@ -9,7 +9,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "sonner";
 import { autoCorrect } from "@/lib/grammar";
 import { autoTranslate } from "@/lib/translate";
-import { correctWord, correctSentence } from "@/lib/wordCorrection";
 import { speakText, detectLanguage, isSpeaking, stopSpeaking } from "@/lib/speech";
 
 interface HandData {
@@ -141,7 +140,7 @@ const Index = () => {
   if (clearPrevious) { setLetter('-'); setWord(''); setSentence(''); setRestartError(null); setIsHindi(false); if (canvasRef.current) { const ctx = canvasRef.current.getContext('2d'); if (ctx) { ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,canvasRef.current.width, canvasRef.current.height); } } }
 
       try {
-        const ws = new WebSocket('ws://127.0.0.1:8000/ws');
+        const ws = new WebSocket('wss://marc-nondisparate-nondetractively.ngrok-free.dev/ws');
         ws.onmessage = (ev) => { 
           try { 
             const data = JSON.parse((ev as MessageEvent).data); 
@@ -150,21 +149,10 @@ const Index = () => {
               const rawWord = data.data?.word || '';
               const rawSentence = data.data?.sentence || '';
               
-              // Apply word correction to fix backend spell-checker mistakes
-              const correctedWord = correctWord(rawWord);
-              const correctedSentence = correctSentence(rawSentence); // Use correctSentence() for full sentence
-              
-              // Log corrections if any were made
-              if (rawWord !== correctedWord && rawWord) {
-                console.log(`🔧 Word corrected: "${rawWord}" → "${correctedWord}"`);
-              }
-              if (rawSentence !== correctedSentence && rawSentence) {
-                console.log(`🔧 Sentence corrected: "${rawSentence}" → "${correctedSentence}"`);
-              }
-              
+              // Use raw data directly from backend without any corrections
               setLetter(rawLetter); 
-              setWord(correctedWord); 
-              setSentence(correctedSentence); 
+              setWord(rawWord); 
+              setSentence(rawSentence); 
             } 
           } catch (e) { 
             console.warn('invalid ws', e); 
