@@ -20,13 +20,10 @@ type HandsType = InstanceType<typeof mpHands.Hands>;
 
 const Index = () => {
   const [isRunning, setIsRunning] = useState(false);
-  const [currentCamera, setCurrentCamera] = useState<"user" | "environment">("user");
   const [cameraStatus, setCameraStatus] = useState("Camera: Off");
   const [letter, setLetter] = useState("-");
   const [word, setWord] = useState("");
   const [sentence, setSentence] = useState("");
-  const [hasDualCamera, setHasDualCamera] = useState(false);
-  const [isSwitchingCamera, setIsSwitchingCamera] = useState(false);
   const [restartError, setRestartError] = useState<string | null>(null);
   const [isHindi, setIsHindi] = useState(false);
   const [videoKey, setVideoKey] = useState(0);
@@ -43,27 +40,11 @@ const Index = () => {
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    checkCameraAvailability();
     return () => { void stopRecognition(); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const checkCameraAvailability = async () => {
-    try {
-      // Request permission first to get accurate device labels
-      await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
-        .then(stream => stream.getTracks().forEach(track => track.stop()))
-        .catch(() => {});
-      
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const videoDevices = devices.filter((d) => d.kind === "videoinput");
-      console.log('Available video devices:', videoDevices.length, videoDevices);
-      setHasDualCamera(videoDevices.length > 1);
-    } catch (e) {
-      console.warn("Failed to enumerate devices", e);
-      setHasDualCamera(false);
-    }
-  };
+
 
   const onResults = (results: mpHands.Results) => {
     if (!canvasRef.current || !videoRef.current) return;
@@ -128,57 +109,38 @@ const Index = () => {
     handsRef.current = hands;
   };
 
-  const getStreamWithFallback = async (facing: "user" | "environment") => {
+  const getStreamWithFallback = async () => {
     try {
-      // Try with facingMode first
-      console.log('Requesting camera with facingMode:', facing);
+      // Always use front camera (user facing)
       return await navigator.mediaDevices.getUserMedia({ 
         video: { 
-          facingMode: { ideal: facing },
+          facingMode: 'user',
           width: { ideal: 1280 },
           height: { ideal: 720 }
         }, 
         audio: false 
       });
     } catch (e) {
-      console.warn('facingMode failed, trying device selection fallback', e);
+      console.warn('Front camera failed, trying default camera', e);
       try {
         const devices = await navigator.mediaDevices.enumerateDevices();
         const videoInputs = devices.filter((d) => d.kind === 'videoinput');
-        console.log('Available video inputs:', videoInputs);
         
         if (videoInputs.length === 0) {
           throw new Error('No video input devices found');
         }
         
-        // Try to pick the right camera based on facing mode
-        let deviceId = videoInputs[0].deviceId;
-        if (videoInputs.length > 1) {
-          // Try to find the appropriate camera
-          const targetDevice = videoInputs.find(d => {
-            const label = d.label.toLowerCase();
-            if (facing === 'user') {
-              return label.includes('front') || label.includes('user');
-            } else {
-              return label.includes('back') || label.includes('rear') || label.includes('environment');
-            }
-          });
-          if (targetDevice) {
-            deviceId = targetDevice.deviceId;
-            console.log('Selected camera:', targetDevice.label);
-          }
-        }
-        
+        // Use first available camera
         return await navigator.mediaDevices.getUserMedia({ 
           video: { 
-            deviceId: { exact: deviceId },
+            deviceId: { exact: videoInputs[0].deviceId },
             width: { ideal: 1280 },
             height: { ideal: 720 }
           }, 
           audio: false 
         });
       } catch (e2) {
-        console.error('All camera fallbacks failed', e2);
+        console.error('All camera attempts failed', e2);
         throw e2;
       }
     }
@@ -218,7 +180,7 @@ const Index = () => {
       } catch (e) { console.warn('ws create failed', e); }
 
       initializeMediaPipe();
-      const stream = await getStreamWithFallback(currentCamera);
+      const stream = await getStreamWithFallback();
       try {
         if (videoRef.current) {
           try { videoRef.current.muted = true; } catch (e) {}
@@ -256,7 +218,7 @@ const Index = () => {
       try { cameraRef.current = new cameraUtils.Camera(videoRef.current as HTMLVideoElement, { onFrame: async () => { if (handsRef.current && videoRef.current) { try { await handsRef.current.send({ image: videoRef.current }); } catch (e) { console.warn('hands send failed', e); } } }, width: 1280, height: 720 }); await cameraRef.current.start(); }
       catch (e) { try { (stream as MediaStream).getTracks().forEach((t) => t.stop()); } catch (e2) {} toast.error('Failed to start camera helper'); return false; }
 
-      setIsRunning(true); setCameraStatus(`Camera: ${currentCamera === 'user' ? 'Front' : 'Back'}`); toast.success('Recognition started'); return true;
+      setIsRunning(true); setCameraStatus('Camera: Front'); toast.success('Recognition started'); return true;
     } catch (e) { console.error('startRecognition error', e); toast.error('Failed to start recognition. Check camera permissions and backend connection.'); return false; }
   };
 
@@ -374,8 +336,6 @@ const Index = () => {
 
   // Stop then start a fresh recognition session. Ensures complete cleanup before restarting.
   const restartRecognition = async () => {
-    if (isSwitchingCamera) return;
-    setIsSwitchingCamera(true);
     toast.info('Restarting camera...');
     try {
       await stopRecognition();
@@ -391,8 +351,6 @@ const Index = () => {
     } catch (e) {
       console.error('restartRecognition failed', e);
       toast.error('Restart failed');
-    } finally {
-      setIsSwitchingCamera(false);
     }
   };
 
@@ -505,40 +463,7 @@ const Index = () => {
     }
   };
 
-  const toggleCamera = async () => {
-    // Allow switching only when camera is running
-    if (!isRunning) {
-      const newCamera = currentCamera === 'user' ? 'environment' : 'user';
-      setCurrentCamera(newCamera);
-      toast.info(`Camera will switch to ${newCamera === 'user' ? 'Front' : 'Back'} when you start`);
-      return;
-    }
 
-    // If running, we need to restart with the new camera
-    const newCamera = currentCamera === 'user' ? 'environment' : 'user';
-    setCurrentCamera(newCamera);
-    setIsSwitchingCamera(true);
-    toast.info(`Switching to ${newCamera === 'user' ? 'Front' : 'Back'} camera...`);
-    
-    try {
-      await stopRecognition();
-      await new Promise((r) => setTimeout(r, 300));
-      const ok = await startRecognitionWithRetry(false);
-      if (ok) {
-        toast.success(`Switched to ${newCamera === 'user' ? 'Front' : 'Back'} camera`);
-        setRestartError(null);
-      } else {
-        toast.error('Failed to switch camera');
-        setRestartError('Switch failed');
-      }
-    } catch (e) {
-      console.error('toggleCamera error', e);
-      toast.error('Camera switch failed');
-      setRestartError('Switch failed');
-    } finally {
-      setIsSwitchingCamera(false);
-    }
-  };
 
   return (
   <div className="min-h-screen bg-background py-2 sm:py-8 overflow-x-hidden">
@@ -558,16 +483,6 @@ const Index = () => {
                 <video key={videoKey} ref={videoRef} className="absolute inset-0 w-full h-full object-cover hidden" playsInline />
                 <canvas ref={canvasRef} width={1280} height={720} className="absolute inset-0 w-full h-full object-contain max-w-full" />
 
-                {isSwitchingCamera && (
-                  <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40">
-                    <div className="px-4 py-2 rounded-md bg-white/10 text-white backdrop-blur-sm flex items-center gap-3">
-                      <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeOpacity="0.2" strokeWidth="4" /><path d="M22 12a10 10 0 00-10-10" stroke="currentColor" strokeWidth="4" strokeLinecap="round" /></svg>
-                      <div>Switching camera...</div>
-                      {restartError && <button onClick={async () => { await restartRecognition(); }} className="ml-3 px-2 py-1 rounded bg-red-600 text-white text-sm">Retry</button>}
-                    </div>
-                  </div>
-                )}
-
                 {!isRunning && (
                   <div className="absolute inset-0 flex items-center justify-center bg-muted/50 backdrop-blur-sm">
                     <div className="text-center space-y-3">
@@ -578,15 +493,6 @@ const Index = () => {
                 )}
               </div>
             </Card>
-
-            {/* Flip camera button above canvas for dual-camera devices */}
-            {hasDualCamera && isMobile && (
-              <div className="flex justify-end -mt-1 mb-1">
-                <button onClick={toggleCamera} className="p-2 rounded-full bg-white/90 dark:bg-gray-800/90 shadow-md flex items-center justify-center" title="Flip Camera" aria-label="Flip Camera">
-                  <SwitchCamera className="w-4 h-4 text-primary" />
-                </button>
-              </div>
-            )}
 
             {/* Controls: Start/Stop with Translate & Speak side-by-side on desktop */}
             <div className="space-y-2 sm:space-y-3">
@@ -602,9 +508,6 @@ const Index = () => {
 
                 {/* Desktop-only small actions placed next to Start */}
                 <div className="hidden sm:flex items-center gap-2">
-                  {hasDualCamera && (
-                    <Button onClick={toggleCamera} size="sm" variant="secondary" disabled={isRunning} aria-disabled={isRunning} className={`gap-2 ${isRunning ? 'opacity-50 pointer-events-none' : ''}`}><SwitchCamera className="w-6 h-6" /></Button>
-                  )}
                   <Button onClick={translateSentence} disabled={isRunning || isTranslating} aria-disabled={isRunning || isTranslating} size="lg" className={`gap-2 bg-gradient-primary hover:opacity-90 transition-opacity px-4 py-2 min-w-[150px] text-lg ${(isRunning || isTranslating) ? 'opacity-50 pointer-events-none' : ''}`}>
                     <Languages className="w-6 h-6" />
                     <span className="ml-2">{isTranslating ? 'Translating...' : `Translate`}</span>
