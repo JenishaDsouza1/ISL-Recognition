@@ -50,11 +50,18 @@ const Index = () => {
 
   const checkCameraAvailability = async () => {
     try {
+      // Request permission first to get accurate device labels
+      await navigator.mediaDevices.getUserMedia({ video: true, audio: false })
+        .then(stream => stream.getTracks().forEach(track => track.stop()))
+        .catch(() => {});
+      
       const devices = await navigator.mediaDevices.enumerateDevices();
       const videoDevices = devices.filter((d) => d.kind === "videoinput");
+      console.log('Available video devices:', videoDevices.length, videoDevices);
       setHasDualCamera(videoDevices.length > 1);
     } catch (e) {
       console.warn("Failed to enumerate devices", e);
+      setHasDualCamera(false);
     }
   };
 
@@ -122,11 +129,58 @@ const Index = () => {
   };
 
   const getStreamWithFallback = async (facing: "user" | "environment") => {
-    try { return await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing }, audio: false }); }
-    catch (e) {
-      try { const devices = await navigator.mediaDevices.enumerateDevices(); const videoInputs = devices.filter((d) => d.kind === 'videoinput'); if (videoInputs.length) return await navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: videoInputs[0].deviceId } }, audio: false }); }
-      catch (e2) { console.warn('fallback failed', e2); }
-      throw e;
+    try {
+      // Try with facingMode first
+      console.log('Requesting camera with facingMode:', facing);
+      return await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          facingMode: { ideal: facing },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }, 
+        audio: false 
+      });
+    } catch (e) {
+      console.warn('facingMode failed, trying device selection fallback', e);
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoInputs = devices.filter((d) => d.kind === 'videoinput');
+        console.log('Available video inputs:', videoInputs);
+        
+        if (videoInputs.length === 0) {
+          throw new Error('No video input devices found');
+        }
+        
+        // Try to pick the right camera based on facing mode
+        let deviceId = videoInputs[0].deviceId;
+        if (videoInputs.length > 1) {
+          // Try to find the appropriate camera
+          const targetDevice = videoInputs.find(d => {
+            const label = d.label.toLowerCase();
+            if (facing === 'user') {
+              return label.includes('front') || label.includes('user');
+            } else {
+              return label.includes('back') || label.includes('rear') || label.includes('environment');
+            }
+          });
+          if (targetDevice) {
+            deviceId = targetDevice.deviceId;
+            console.log('Selected camera:', targetDevice.label);
+          }
+        }
+        
+        return await navigator.mediaDevices.getUserMedia({ 
+          video: { 
+            deviceId: { exact: deviceId },
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }, 
+          audio: false 
+        });
+      } catch (e2) {
+        console.error('All camera fallbacks failed', e2);
+        throw e2;
+      }
     }
   };
 
@@ -452,15 +506,38 @@ const Index = () => {
   };
 
   const toggleCamera = async () => {
-    // Prevent toggling camera while recognition is active. Require user to stop first.
-    if (isRunning) {
-      toast.error('Stop recognition before switching the camera');
+    // Allow switching only when camera is running
+    if (!isRunning) {
+      const newCamera = currentCamera === 'user' ? 'environment' : 'user';
+      setCurrentCamera(newCamera);
+      toast.info(`Camera will switch to ${newCamera === 'user' ? 'Front' : 'Back'} when you start`);
       return;
     }
 
+    // If running, we need to restart with the new camera
     const newCamera = currentCamera === 'user' ? 'environment' : 'user';
-    // If not running, just switch camera selection (no need to restart pipeline here)
     setCurrentCamera(newCamera);
+    setIsSwitchingCamera(true);
+    toast.info(`Switching to ${newCamera === 'user' ? 'Front' : 'Back'} camera...`);
+    
+    try {
+      await stopRecognition();
+      await new Promise((r) => setTimeout(r, 300));
+      const ok = await startRecognitionWithRetry(false);
+      if (ok) {
+        toast.success(`Switched to ${newCamera === 'user' ? 'Front' : 'Back'} camera`);
+        setRestartError(null);
+      } else {
+        toast.error('Failed to switch camera');
+        setRestartError('Switch failed');
+      }
+    } catch (e) {
+      console.error('toggleCamera error', e);
+      toast.error('Camera switch failed');
+      setRestartError('Switch failed');
+    } finally {
+      setIsSwitchingCamera(false);
+    }
   };
 
   return (
